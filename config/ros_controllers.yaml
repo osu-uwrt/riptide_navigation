@@ -29,11 +29,4 @@ controller_list:
     default: True
     type: FollowJointTrajectory
     joints:
-      - puddles/thruster_0_joint
-      - puddles/thruster_1_joint
-      - puddles/thruster_2_joint
-      - puddles/thruster_3_joint
-      - puddles/thruster_4_joint
-      - puddles/thruster_5_joint
-      - puddles/thruster_6_joint
-      - puddles/thruster_7_joint
+      - floating_baselink
