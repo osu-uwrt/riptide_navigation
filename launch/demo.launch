@@ -48,6 +48,9 @@
     <arg name="pipeline" value="$(arg pipeline)"/>
   </include>
 
+  <include file="$(find riptide_moveit_config)/launch/puddles_moveit_multidof_controller.launch">
+  </include>
+
   <!-- Run Rviz and load the default config to see the state of the move_group node -->
   <include file="$(find riptide_moveit_config)/launch/moveit_rviz.launch">
     <arg name="rviz_config" value="$(find riptide_moveit_config)/launch/moveit.rviz"/>
