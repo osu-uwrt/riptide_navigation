@@ -15,21 +15,28 @@ class ExecuteTrajectory(object):
     def execute_cb(self, goal):
         rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))
         
-        # store the x y and z translations from since last time interval
-        xDelta = ...geometry_msgs.transform.translation.x
-        yDelta = ...geometry_msgs.transform.translation.y
-        zDelta = ...geometry_msgs.transform.translation.z
-        
-        # store positions as p
-        p = ...trajectory_msgs.JointTrajectoryPoint.positions
-        # store velocities as v
-        v = ...trajectory_msgs.JointTrajectoryPoint.velocities
-        # store accelerations as a
-        a = ...trajectory_msgs.JointTrajectoryPoint.accelerations
+        point1 = goal.goal.trajectory.multi_dof_joint_trajectory.points[len(points) - 1]
+        point2 = goal.goal.trajectory.multi_dof_joint_trajectory.points[len(points)]
 
-        p.append()
-        v.append()
-        a.append()
+        # store the x y z and time at current position
+        x2 = point2.transforms.translation.x
+        y2 = point2.transforms.translation.y
+        z2 = point2.transforms.translation.z
+
+        time2 = time_from_start
+
+        # store the x y z and time one index before current positions
+        x1 = point1.transforms.translation.x
+        y1 = point1.transforms.translation.y
+        z1 = point1.transforms.translation.z
+
+        time1 = time_from_start
+        
+        # store position as p:      
+        
+        # store velocity as v:
+        
+        # store acceleration as a:
 
 
 
