@@ -15,36 +15,47 @@ class ExecuteTrajectory(object):
     def execute_cb(self, goal):
         rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))
         
-        point1 = goal.goal.trajectory.multi_dof_joint_trajectory.points[len(points) - 1]
-        point2 = goal.goal.trajectory.multi_dof_joint_trajectory.points[len(points)]
+        points = goal.goal.trajectory.multi_dof_joint_trajectory.points
 
-        # store the x y z and time at current position
-        x2 = point2.transforms.translation.x
-        y2 = point2.transforms.translation.y
-        z2 = point2.transforms.translation.z
+        p = []
+        v = []
+        a = []
 
-        time2 = time_from_start
+        for i in range(len(points)):
+            point = points[i]
 
-        # store the x y z and time one index before current positions
-        x1 = point1.transforms.translation.x
-        y1 = point1.transforms.translation.y
-        z1 = point1.transforms.translation.z
+            # store the x y z and time at current position
+            x = point.transforms.translation.x
+            y = point.transforms.translation.y
+            z = point.transforms.translation.z
 
-        time1 = time_from_start
-        
-        # store position as p:      
-        
-        # store velocity as v:
-        
-        # store acceleration as a:
+            time = points[i + 1].time_from_start.to_sec() - points[i - 1].time_from_start.to_sec()
 
+            # add position to array p      
+            pos = [x, y, z]
+            p.append(pos)
 
+            # add velocity to array v
+            if (i = 0):
+                v.append([0, 0, 0])
+            elif (i = len(points)):
+                # I am not sure what to put at the end of velocity array
+            else:
+                p2 = p[i + 1]
+                p1 = p[i - 1]
+                vel = [(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time]
+                v.append(vel)
 
-
-
-
-        
-
+            # add acceleration to array a
+            if (i = 0):
+                a.append([0, 0, 0])
+            elif (i = len(points)):
+                #I am not sure what to put at end of accel array
+            else:
+                v2 = v[i + 1]
+                v1 = v[i - 1]
+                acc = [(v2[0] - v1[0])/time, (v2[1] - v1[1])/time, (v2[2] - v1[2])/time]
+                a.append(acc)
 
 if __name__ == '__main__':
     rospy.init_node('execute_trajectory')
