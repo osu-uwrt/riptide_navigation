@@ -40,9 +40,9 @@ class ExecuteTrajectory(object):
             p.append(pos)
 
             # add velocity to array v
-            if (i = 0):
+            if (i == 0):
                 v.append([0, 0, 0])
-            elif (i = len(points)):
+            elif (i == len(points)):
                 # I am not sure what to put at the end of velocity array
             else:
                 p2 = p[i + 1]
@@ -65,7 +65,7 @@ class ExecuteTrajectory(object):
         response.velocities.linear = v
         response.accelerations.linear = a
 
-        return res
+        return response
 
 if __name__ == '__main__':
     rospy.init_node('execute_trajectory')
