@@ -21,6 +21,9 @@ class ExecuteTrajectory(object):
         v = []
         a = []
 
+        # create a response
+        import MultiDOFJointTrajectoryPoint as response
+
         for i in range(len(points)):
             point = points[i]
 
@@ -28,6 +31,7 @@ class ExecuteTrajectory(object):
             x = point.transforms.translation.x
             y = point.transforms.translation.y
             z = point.transforms.translation.z
+
 
             time = points[i + 1].time_from_start.to_sec() - points[i - 1].time_from_start.to_sec()
 
@@ -56,6 +60,12 @@ class ExecuteTrajectory(object):
                 v1 = v[i - 1]
                 acc = [(v2[0] - v1[0])/time, (v2[1] - v1[1])/time, (v2[2] - v1[2])/time]
                 a.append(acc)
+
+        # add the velocity and the acceleration to the response variable
+        response.velocities.linear = v
+        response.accelerations.linear = a
+
+        return res
 
 if __name__ == '__main__':
     rospy.init_node('execute_trajectory')
