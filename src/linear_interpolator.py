@@ -11,7 +11,7 @@ class ExecuteTrajectory(object):
 
     def __init__(self):
         self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
-         # make a publisher instead of returning response (rospy.publisher)
+        self.actionPub = rospy.Publisher("topic_name", MultiDOFJointTrajectory, queue_size=1)
 
     def execute_cb(self, goal):
         rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))
@@ -80,7 +80,8 @@ class ExecuteTrajectory(object):
             response[i].accelerations.linear.y = acc[1]
             response[i].accelerations.linear.z = acc[2]
 
-        return response
+        # publish the response to a topic
+        self.actionPub.publish(response)
 
 if __name__ == '__main__':
     rospy.init_node('execute_trajectory')
