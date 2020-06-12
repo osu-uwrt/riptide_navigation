@@ -6,7 +6,11 @@
   <arg name="robot_description" default="robot_description"/>
 
   <!-- Load universal robot description format (URDF) -->
-  <param if="$(arg load_robot_description)" name="$(arg robot_description)" textfile="$(find riptide_descriptions)/robots/puddles.urdf"/>
+  <param if="$(arg load_robot_description)" name="$(arg robot_description)"
+              command="$(find xacro)/xacro '$(find riptide_descriptions)/robots/puddles.xacro' --inorder
+                      debug:=false
+                      namespace:=puddles
+                      inertial_reference_frame:=world" />
 
   <!-- The semantic description that corresponds to the URDF -->
   <param name="$(arg robot_description)_semantic" textfile="$(find riptide_moveit_config)/config/puddles.srdf" />
