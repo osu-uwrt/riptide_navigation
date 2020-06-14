@@ -3,8 +3,8 @@ import rospy
 import actionlib
 
 from moveit_msgs.msg import ExecuteTrajectoryActionGoal
-from trajectory_msgs.msg import JointTrajectoryPoint
-from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint, MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
+from geometry_msgs.msg import Transform, Twist
 
 class ExecuteTrajectory(object):
 
@@ -13,8 +13,8 @@ class ExecuteTrajectory(object):
         self.actionPub = rospy.Publisher("topic_name", MultiDOFJointTrajectory, queue_size=1)
 
     def execute_cb(self, goal):
-        rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))
-        
+        rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))        
+
         # array of each point as a move_it msg
         points = goal.goal.trajectory.multi_dof_joint_trajectory.points
 
@@ -23,64 +23,124 @@ class ExecuteTrajectory(object):
         v = []
         a = []
 
-        # create a response (?)
-        response = MultiDOFJointTrajectory()
-
+        # convert multi_dof_joint_trajectory to array p
         for i in range(len(points)):
             point = points[i]
-
-            # store the x y z and time at current position
-            x = point.transforms.translation.x
-            y = point.transforms.translation.y
-            z = point.transforms.translation.z
+            x = point.transforms[0].translation.x
+            y = point.transforms[0].translation.y
+            z = point.transforms[0].translation.z
+            time = point.time_from_start.to_sec()
 
             # add position to array p      
-            pos = [x, y, z]
+            pos = [x, y, z, time]
             p.append(pos)
 
-            # add velocity to array v
-            times = []
-            if (i == 0):
-                p2 = p[1]
-                p1 = p[0]
-                times.append(points[1].time_from_start.to_sec() - points[0].time_from_start.to_sec())
-            elif (i == len(points) - 1):
-                end = len(points) - 1
-                p2 = p[end]
-                p1 = p[end - 1]
-                times.append(points[end].time_from_start.to_sec() - points[end].time_from_start.to_sec())
-            else:
-                p2 = p[i + 1]
-                p1 = p[i - 1]
-                time.append(points[i + 1].time_from_start.to_sec() - points[i - 1].time_from_start.to_sec())
-            time = times[i]
-            vel = [(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time]
-            v.append(vel)
-            response[i].velocities.linear.x = vel[0]
-            response[i].velocities.linear.y = vel[1]
-            response[i].velocities.linear.z = vel[2]
+        # v = deriv(self, p)
+        # a = deriv(self, v)
 
-        for j in range(len(v)):
-            time = times[j]
+        # ------------
+        arr = p
+        ans = []
+        for i in range(len(p)):
+            current = arr[i]
+            currentTime = current[3]
+            time = 0
+            p2 = None 
+            p1 = None
             # add acceleration to array a
-            if (j == 0):
-                p2 = v[1]
-                p1 = v[0]
-            elif (j == len(v) - 1):
-                end = len(v) - 1
-                p2 = v[end]
-                p1 = v[end - 1]
+            if (i == 0):
+                p2 = arr[1]
+                p1 = arr[0]                
+            elif (i == len(arr) - 1):
+                end = len(arr) - 1
+                p2 = arr[end]
+                p1 = arr[end - 1]
             else:
-                p2 = v[i + 1]
-                p1 = v[i - 1]
-            acc = [(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time]
-            a.append(acc)
-            response[i].accelerations.linear.x = acc[0]
-            response[i].accelerations.linear.y = acc[1]
-            response[i].accelerations.linear.z = acc[2]
+                p2 = arr[i + 1]
+                p1 = arr[i - 1]
+            time = p2[3] - p1[3]
+                        
+            ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time, currentTime])
+        v = ans
+
+        arr = v
+        ans = []   
+        for i in range(len(v)):
+            current = arr[i]
+            currentTime = current[3]
+            time = 0
+            # add acceleration to array a
+            if (i == 0):
+                p2 = arr[1]
+                p1 = arr[0]                
+            elif (i == len(arr) - 1):
+                end = len(arr) - 1
+                p2 = arr[end]
+                p1 = arr[end - 1]
+            else:
+                p2 = arr[i + 1]
+                p1 = arr[i - 1]
+            time = p2[3] - p1[3]            
+            currentTime = v[i][3]            
+            ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time, currentTime])
+        a = ans
+
+        # ------------
+
+        # create a response object and publish
+        response = MultiDOFJointTrajectory()        
+        
+        for i in range(len(points)):            
+            response.points.append(MultiDOFJointTrajectoryPoint())
+            pos = p[i]
+            vel = v[i]
+            acc = a[i]
+            time = pos[3]
+
+            response.points[i].transforms.append(Transform())
+
+            response.points[i].transforms[0].translation.x = pos[0]
+            response.points[i].transforms[0].translation.y = pos[1]
+            response.points[i].transforms[0].translation.z = pos[2]
+
+            response.points[i].velocities.append(Twist())
+    
+            response.points[i].velocities[0].linear.x = vel[0]
+            response.points[i].velocities[0].linear.y = vel[1]
+            response.points[i].velocities[0].linear.z = vel[2]
+
+            response.points[i].accelerations.append(Twist())
+
+            response.points[i].accelerations[0].linear.x = acc[0]
+            response.points[i].accelerations[0].linear.y = acc[1]
+            response.points[i].accelerations[0].linear.z = acc[2]
+
+            # response[i].time_from_start = time 
 
         # publish the response to a topic
         self.actionPub.publish(response)
+
+    # take derivative of array of [x, y, z, time] and return it
+    # def deriv(self, arr):
+    #     for i in range(len(arr)):
+    #         ans = []
+    #         time = 0
+    #         p2 = None 
+    #         p1 = None
+    #         # add acceleration to array a
+    #         if (i == 0):
+    #             p2 = arr[1]
+    #             p1 = arr[0]                
+    #         elif (i == len(arr) - 1):
+    #             end = len(arr) - 1
+    #             p2 = arr[end]
+    #             p1 = arr[end - 1]
+    #         else:
+    #             p2 = arr[i + 1]
+    #             p1 = arr[i - 1]
+    #         time = p2[3] - p1[3]            
+    #         ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time])
+    #     return ans
 
 if __name__ == '__main__':
     rospy.init_node('linear_interpolator')
