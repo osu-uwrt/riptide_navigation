@@ -1,61 +1,88 @@
-import rclpy
-from rclpy.node import Node
-from geometry_msgs.msg import Twist, Transform, Vector3
-import math
+#! /usr/bin/env python
+import rospy
+import actionlib
 
-class LinearInterpolator(Node):
+from moveit_msgs.msg import ExecuteTrajectoryActionGoal
+from trajectory_msgs.msg import JointTrajectoryPoint
+from trajectory_msgs.msg import MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
+
+class ExecuteTrajectory(object):
 
     def __init__(self):
-        super().__init__('linear_interpolation_action_server')
-        self._action_server = ActionServer(
-            self,
-            #TODO Some sort of action goes here,
-            'linear interpolator',
-            self.execute_callback)
+        self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
+        self.actionPub = rospy.Publisher("topic_name", MultiDOFJointTrajectory, queue_size=1)
 
-    
-    def execute_callback(self, goal_handle):
-        print("TODO")
+    def execute_cb(self, goal):
+        rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))
+        
+        # array of each point as a move_it msg
+        points = goal.goal.trajectory.multi_dof_joint_trajectory.points
 
-    def create_velocity_arr(self, transforms, time_interval):
-        vel_arr = []
-        for i in range(0,transforms.len() - 2):
-            vec3_init = transforms[i].translation
-            vec3_fin = transforms[i + 1].translation
-            vel = calc_velocity(vec3_init, vec3_fin, time_interval)
-            vel_arr.push(vel)
-        return vel_arr
+        # arrays for position, velocity, and acceleration
+        p = []
+        v = []
+        a = []
 
-    def create_accelleration_arr(self, vel_arr, time_interval):
-        acc_arr = []
-        for i in range(0, vel_arr.len() - 2):
-            vel_init = vel_arr[i]
-            vel_fin = vel_arr[i + 1]
-            acc = calc_accelleration(vel_init, vel_fin, time_interval)
-            acc_arr.push(acc)
-        return acc_arr
-            
-    def calc_velocity(self, pos_init, pos_fin, time_interval):
-        out = Twist()
-        out.linear.x = (pos_fin.x - pos_init.x) / time_interval
-        out.linear.y = (pos_fin.y - pos_init.y) / time_interval
-        out.linear.z = (pos_fin.z - pos_init.z) / time_interval
-        return out
+        # create a response (?)
+        response = MultiDOFJointTrajectory()
 
-    def calc_accelleration(self, vel_init, vel_fin, time_interval):
-        out = Twist()
-        out.linear.x = (vel_fin.linear.x - vel_init.linear.x) / time_interval
-        out.linear.y = (vel_fin.linear.y - vel_init.linear.y) / time_interval
-        out.linear.z = (vel_fin.linear.z - vel_init.linear.z) / time_interval
-        return out
+        for i in range(len(points)):
+            point = points[i]
 
-def main(args=None):
-    rclpy.init(args=args)
+            # store the x y z and time at current position
+            x = point.transforms.translation.x
+            y = point.transforms.translation.y
+            z = point.transforms.translation.z
 
-    linear_interpolator = LinearInterpolator()
+            # add position to array p      
+            pos = [x, y, z]
+            p.append(pos)
 
-    rclpy.spin(linear_interpolator)
+            # add velocity to array v
+            times = []
+            if (i == 0):
+                p2 = p[1]
+                p1 = p[0]
+                times.append(points[1].time_from_start.to_sec() - points[0].time_from_start.to_sec())
+            elif (i == len(points) - 1):
+                end = len(points) - 1
+                p2 = p[end]
+                p1 = p[end - 1]
+                times.append(points[end].time_from_start.to_sec() - points[end].time_from_start.to_sec())
+            else:
+                p2 = p[i + 1]
+                p1 = p[i - 1]
+                time.append(points[i + 1].time_from_start.to_sec() - points[i - 1].time_from_start.to_sec())
+            time = times[i]
+            vel = [(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time]
+            v.append(vel)
+            response[i].velocities.linear.x = vel[0]
+            response[i].velocities.linear.y = vel[1]
+            response[i].velocities.linear.z = vel[2]
 
+        for j in range(len(v)):
+            time = times[j]
+            # add acceleration to array a
+            if (j == 0):
+                p2 = v[1]
+                p1 = v[0]
+            elif (j == len(v) - 1):
+                end = len(v) - 1
+                p2 = v[end]
+                p1 = v[end - 1]
+            else:
+                p2 = v[i + 1]
+                p1 = v[i - 1]
+            acc = [(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time]
+            a.append(acc)
+            response[i].accelerations.linear.x = acc[0]
+            response[i].accelerations.linear.y = acc[1]
+            response[i].accelerations.linear.z = acc[2]
+
+        # publish the response to a topic
+        self.actionPub.publish(response)
 
 if __name__ == '__main__':
-    main()
+    rospy.init_node('linear_interpolator')
+    server = ExecuteTrajectory()
+    rospy.spin()
