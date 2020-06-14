@@ -58,8 +58,7 @@ class ExecuteTrajectory(object):
             else:
                 p2 = arr[i + 1]
                 p1 = arr[i - 1]
-            time = p2[3] - p1[3]
-                        
+            time = p2[3] - p1[3]           
             ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time, currentTime])
         v = ans
 
@@ -87,7 +86,7 @@ class ExecuteTrajectory(object):
 
         # ------------
 
-        # create a response object and publish
+        # create a response object
         response = MultiDOFJointTrajectory()        
         
         for i in range(len(points)):            
@@ -119,28 +118,6 @@ class ExecuteTrajectory(object):
 
         # publish the response to a topic
         self.actionPub.publish(response)
-
-    # take derivative of array of [x, y, z, time] and return it
-    # def deriv(self, arr):
-    #     for i in range(len(arr)):
-    #         ans = []
-    #         time = 0
-    #         p2 = None 
-    #         p1 = None
-    #         # add acceleration to array a
-    #         if (i == 0):
-    #             p2 = arr[1]
-    #             p1 = arr[0]                
-    #         elif (i == len(arr) - 1):
-    #             end = len(arr) - 1
-    #             p2 = arr[end]
-    #             p1 = arr[end - 1]
-    #         else:
-    #             p2 = arr[i + 1]
-    #             p1 = arr[i - 1]
-    #         time = p2[3] - p1[3]            
-    #         ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time])
-    #     return ans
 
 if __name__ == '__main__':
     rospy.init_node('linear_interpolator')
