@@ -12,8 +12,7 @@ class ExecuteTrajectory(object):
         self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
         self.actionPub = rospy.Publisher("topic_name", MultiDOFJointTrajectory, queue_size=1)
 
-    def execute_cb(self, goal):
-        # rospy.loginfo("There are %d points in the trajectory!" % len(goal.goal.trajectory.multi_dof_joint_trajectory.points))        
+    def execute_cb(self, goal):        
 
         # array of each point as a move_it msg
         points = goal.goal.trajectory.multi_dof_joint_trajectory.points
