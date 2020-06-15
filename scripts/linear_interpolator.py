@@ -34,11 +34,7 @@ class ExecuteTrajectory(object):
             # add position to array p      
             pos = [x, y, z, time]
             p.append(pos)
-
-        # v = deriv(self, p)
-        # a = deriv(self, v)
-
-        # ------------
+            
         arr = p
         ans = []
         for i in range(len(p)):
@@ -84,8 +80,6 @@ class ExecuteTrajectory(object):
             ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time, currentTime])
         a = ans
 
-        # ------------
-
         # create a response object
         response = MultiDOFJointTrajectory()        
         
@@ -114,7 +108,7 @@ class ExecuteTrajectory(object):
             response.points[i].accelerations[0].linear.y = acc[1]
             response.points[i].accelerations[0].linear.z = acc[2]
 
-            # response[i].time_from_start = time 
+            # response[i].time_from_start = time
 
         # publish the response to a topic
         self.actionPub.publish(response)
