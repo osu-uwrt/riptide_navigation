@@ -34,7 +34,7 @@ class ExecuteTrajectory(object):
             # add position to array p      
             pos = [x, y, z, time]
             p.append(pos)
-            
+
         arr = p
         ans = []
         for i in range(len(p)):
@@ -108,7 +108,7 @@ class ExecuteTrajectory(object):
             response.points[i].accelerations[0].linear.y = acc[1]
             response.points[i].accelerations[0].linear.z = acc[2]
 
-            # response[i].time_from_start = time
+            response.points[i].time_from_start = points[i].time_from_start
 
         # publish the response to a topic
         self.actionPub.publish(response)
