@@ -16,28 +16,28 @@ class ExecuteTrajectory(object):
         ans = [(p2[0] - p1[0])/dt, (p2[1] - p1[1])/dt, (p2[2] - p1[2])/dt]
         return worldToBody(ans, currentOrientation)
 
-# q1 is first orientation, q2 is second orientation. Dt is time between them
- # Will return angular velocity to traverse between the two points in body frame. 
- # Must also pass currentOrientation. This is the orientation for the time period
- def calculateAngularVelocity(self, q1, q2, currentOrientation, dt):
-    # Convert to tf quaternion format
-    q1 = [q1.x, q1.y, q1.z, q1.w]
-    q2 = [q2.x, q2.y, q2.z, q2.w]
-    currentOrientation = [currentOrientation.x, currentOrientation.y, currentOrientation.z, currentOrientation.w]
- 
-    # Below code only works with small angles. Should be the case for interpolator
-    # Compute dq of our error and convert to angular velocity
-    # This uses the dq/dt = .5*q*w equation
-    dq = np.array(q2) - np.array(q1)
-    angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
-    return angularVel
- 
- def worldToBody(self, vector, orientation):
-    orientation = [orientation.x, orientation.y, orientation.z, orientation.w]
-    orientationInv = quaternion_inverse(orientation)
-    vector.append(0)
-    newVector = quaternion_multiply(orientation, quaternion_multiply(vector, orientationInv))[:3]
-    return newVector
+    # q1 is first orientation, q2 is second orientation. Dt is time between them
+    # Will return angular velocity to traverse between the two points in body frame. 
+    # Must also pass currentOrientation. This is the orientation for the time period
+    def calculateAngularVelocity(self, q1, q2, currentOrientation, dt):
+        # Convert to tf quaternion format
+        q1 = [q1.x, q1.y, q1.z, q1.w]
+        q2 = [q2.x, q2.y, q2.z, q2.w]
+        currentOrientation = [currentOrientation.x, currentOrientation.y, currentOrientation.z, currentOrientation.w]
+
+        # Below code only works with small angles. Should be the case for interpolator
+        # Compute dq of our error and convert to angular velocity
+        # This uses the dq/dt = .5*q*w equation
+        dq = np.array(q2) - np.array(q1)
+        angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
+        return angularVel
+    
+    def worldToBody(self, vector, orientation):
+        orientation = [orientation.x, orientation.y, orientation.z, orientation.w]
+        orientationInv = quaternion_inverse(orientation)
+        vector.append(0)
+        newVector = quaternion_multiply(orientation, quaternion_multiply(vector, orientationInv))[:3]
+        return newVector
 
 def __init__(self):
     self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
@@ -61,11 +61,7 @@ def execute_cb(self, goal):
     # extract position, rotation and time from multi_dof_joint_trajectory
     for i in range(len(points)):
         point = points[i]
-        x = 
-        y = 
-        z = point.transforms[0].translation.z
-        t = point.time_from_start.to_sec()
-
+        
         # add position to array p           
         p.append([
             point.transforms[0].translation.x, 
@@ -77,7 +73,7 @@ def execute_cb(self, goal):
         angP.append([point.transforms[0].rotation])
 
         # add time at the point to array t
-        t.append(time)
+        t.append(point.time_from_start.to_sec())
 
 
     # take derivate of position to get velocity relative to the robot body
