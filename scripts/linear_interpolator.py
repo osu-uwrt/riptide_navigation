@@ -37,7 +37,7 @@ class ExecuteTrajectory(object):
     def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
         # take derivate of position to get world velocity and convert to body velocity
         ans = [(p2[0] - p1[0])/dt, (p2[1] - p1[1])/dt, (p2[2] - p1[2])/dt]
-        return worldToBody(ans, currentOrientation)
+        return self.worldToBody(ans, currentOrientation)
 
     def __init__(self):
         self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
@@ -48,15 +48,17 @@ class ExecuteTrajectory(object):
         # array of each point as a move_it msg
         points = goal.goal.trajectory.multi_dof_joint_trajectory.points
 
-        # arrays for position, velocity, acceleration, and time
+        # arrays for linear and angular position, velocity, and acceleration
         p = []
         v = []
-        a = []
-        t = []
+        a = []        
 
         angP = []
         angV = []
         angA = []    
+
+        # array for time
+        t = []
 
         # extract position, rotation and time from multi_dof_joint_trajectory
         for i in range(len(points)):
@@ -70,7 +72,7 @@ class ExecuteTrajectory(object):
             ])
 
             # add rotation quaternion to array r
-            angP.append([point.transforms[0].rotation])
+            angP.append(point.transforms[0].rotation)
 
             # add time at the point to array t
             t.append(point.time_from_start.to_sec())
@@ -117,8 +119,8 @@ class ExecuteTrajectory(object):
                 dt = t[i + 1] - t[i - 1]
 
             # add linear and angular velocity at the current point to v and angV arrays
-            v.append(calculateLinearVelocity(p1, p2, currentOrientation, dt))
-            angV.append(calculateAngularVelocity(q1, q2, currentOrientation, dt))
+            v.append(self.calculateLinearVelocity(p1, p2, currentOrientation, dt))
+            angV.append(self.calculateAngularVelocity(q1, q2, currentOrientation, dt))
 
 
 
@@ -163,8 +165,8 @@ class ExecuteTrajectory(object):
                 dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
 
             # add linear and angular acceleration at the current point to a and angA arrays
-            a.append(calculateLinearVelocity(p1, p2, currentOrientation, dt))
-            angA.append(calculateAngularVelocity(q1, q2, currentOrientation, dt))
+            a.append(self.calculateLinearVelocity(p1, p2, currentOrientation, dt))
+            angA.append(self.calculateAngularVelocity(q1, q2, currentOrientation, dt))
 
         # create an object to store the response
         response = MultiDOFJointTrajectory()        
