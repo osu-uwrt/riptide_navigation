@@ -12,10 +12,9 @@ import numpy as np
 class ExecuteTrajectory(object):
 
     def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
-        # take derivate of position to get velocity
-        ans = []
-            ans.append([(p2[0] - p1[0])/time, (p2[1] - p1[1])/time, (p2[2] - p1[2])/time])
-    return ans
+        # take derivate of position to get world velocity and convert to body velocity
+        ans = [(p2[0] - p1[0])/dt, (p2[1] - p1[1])/dt, (p2[2] - p1[2])/dt]
+        return worldToBody(ans, currentOrientation)
 
 # q1 is first orientation, q2 is second orientation. Dt is time between them
  # Will return angular velocity to traverse between the two points in body frame. 
@@ -33,7 +32,7 @@ class ExecuteTrajectory(object):
     angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
     return angularVel
  
- def worldToBody(self, positions, orientations):
+ def worldToBody(self, vector, orientation):
     orientation = [orientation.x, orientation.y, orientation.z, orientation.w]
     orientationInv = quaternion_inverse(orientation)
     vector.append(0)
