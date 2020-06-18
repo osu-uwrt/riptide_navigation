@@ -175,31 +175,43 @@ class ExecuteTrajectory(object):
             pos = p[i]
             vel = v[i]
             acc = a[i]
-            time = pos[3]
+            angVel = angV[i]
+            angAcc = angA[i]
 
-            # add x y and z position
+            point = response.points[i]
+            # add x y z position and angular rotation quaternion
             response.points[i].transforms.append(Transform())
 
-            response.points[i].transforms[0].translation.x = pos[0]
-            response.points[i].transforms[0].translation.y = pos[1]
-            response.points[i].transforms[0].translation.z = pos[2]
+            point.transforms[0].translation.x = pos[0]
+            point.transforms[0].translation.y = pos[1]
+            point.transforms[0].translation.z = pos[2]
 
-            # add x y and z velocity
-            response.points[i].velocities.append(Twist())
+            point.transforms[0].rotation = angP[i]
 
-            response.points[i].velocities[0].linear.x = vel[0]
-            response.points[i].velocities[0].linear.y = vel[1]
-            response.points[i].velocities[0].linear.z = vel[2]
+            # add x y z velocity and angular velocity
+            point.velocities.append(Twist())
 
-            # add x y and z acceleration
-            response.points[i].accelerations.append(Twist())
+            point.velocities[0].linear.x = vel[0]
+            point.velocities[0].linear.y = vel[1]
+            point.velocities[0].linear.z = vel[2]
 
-            response.points[i].accelerations[0].linear.x = acc[0]
-            response.points[i].accelerations[0].linear.y = acc[1]
-            response.points[i].accelerations[0].linear.z = acc[2]
+            point.velocities[0].angular.x = angVel[0]
+            point.velocities[0].angular.y = angVel[1]
+            point.velocities[0].angular.z = angVel[2]
+
+            # add x y and z acceleration and angular acceleration
+            point.accelerations.append(Twist())
+
+            point.accelerations[0].linear.x = acc[0]
+            point.accelerations[0].linear.y = acc[1]
+            point.accelerations[0].linear.z = acc[2]
+
+            point.accelerations[0].angular.x = angAcc[0]
+            point.accelerations[0].angular.y = angAcc[1]
+            point.accelerations[0].angular.z = angAcc[2]
 
             # add time since start of execution to each point
-            response.points[i].time_from_start = points[i].time_from_start
+        point.time_from_start = points[i].time_from_start
 
         # publish the response to a topic
         self.actionPub.publish(response)
