@@ -176,7 +176,7 @@ class ExecuteTrajectory(object):
                 dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
 
             # add linear and angular acceleration at the current point to a and angA arrays
-            a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
+            # a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
             angA.append(self.calculateAngularAcceleration(q1, q2, currentOrientation, dt))
 
         # create an object to store the response
