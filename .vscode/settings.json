@@ -1,9 +1,0 @@
-{
-    "python.pythonPath": "/usr/bin/python3",
-    "python.autoComplete.extraPaths": [
-        "/home/mitch/osu-uwrt/riptide_software/devel/lib/python2.7/dist-packages",
-        "/home/mitch/osu-uwrt/dependencies/install/lib/python2.7/dist-packages",
-        "/home/mitch/osu-uwrt/dependencies/MYNT/wrappers/ros/devel/lib/python2.7/dist-packages",
-        "/opt/ros/melodic/lib/python2.7/dist-packages"
-    ]
-}

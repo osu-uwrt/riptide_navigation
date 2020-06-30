@@ -27,15 +27,10 @@ class ExecuteTrajectory(object):
         angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
         return angularVel
     
-    def calculateAngularAcceleration(self, v1, v2, currentOrientation, dt):
-        # Convert to tf quaternion format
-        currentOrientation = [currentOrientation.x, currentOrientation.y, currentOrientation.z, currentOrientation.w]
-
-        # Below code only works with small angles. Should be the case for interpolator
-        # Compute dq of our error and convert to angular velocity
-        # This uses the dq/dt = .5*q*w equation
-        dq = np.array(q2) - np.array(q1)
-        angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
+    def calculateAngularAcceleration(self, v1, v2 dt):
+        v1 = np.array(v1)
+        v2 = np.array(v2)
+        angularVel = v2 - v1 / dt
         return angularVel
 
     def worldToBody(self, vector, orientation):
@@ -176,7 +171,7 @@ class ExecuteTrajectory(object):
                 dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
 
             # add linear and angular acceleration at the current point to a and angA arrays
-            # a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
+            a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
             angA.append(self.calculateAngularAcceleration(q1, q2, currentOrientation, dt))
 
         # create an object to store the response
