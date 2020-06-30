@@ -40,10 +40,16 @@ class ExecuteTrajectory(object):
         newVector = quaternion_multiply(orientation, quaternion_multiply(vector, orientationInv))[:3]
         return newVector
 
-    def calculateLinearDeriv(self, p1, p2, currentOrientation, dt):
+    def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
         # take derivate of position to get world velocity and convert to body velocity
         ans = [(p2[0] - p1[0])/dt, (p2[1] - p1[1])/dt, (p2[2] - p1[2])/dt]
         return self.worldToBody(ans, currentOrientation)
+
+    def calculateLinearAcceleration(self, v1, v2, dt):
+        v1 = np.array(v1)
+        v2 = np.array(v2)
+        angularAccel = v2 - v1 / dt
+        return angularAccel
 
     def __init__(self):
         self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
@@ -171,8 +177,8 @@ class ExecuteTrajectory(object):
                 dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
 
             # add linear and angular acceleration at the current point to a and angA arrays
-            a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
-            angA.append(self.calculateAngularAcceleration(q1, q2, currentOrientation, dt))
+            a.append(self.calculateLinearDeriv(p1, p2, dt))
+            angA.append(self.calculateAngularAcceleration(q1, q2, dt))
 
         # create an object to store the response
         response = MultiDOFJointTrajectory()        
