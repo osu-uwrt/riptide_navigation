@@ -27,6 +27,17 @@ class ExecuteTrajectory(object):
         angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
         return angularVel
     
+    def calculateAngularAcceleration(self, v1, v2, currentOrientation, dt):
+        # Convert to tf quaternion format
+        currentOrientation = [currentOrientation.x, currentOrientation.y, currentOrientation.z, currentOrientation.w]
+
+        # Below code only works with small angles. Should be the case for interpolator
+        # Compute dq of our error and convert to angular velocity
+        # This uses the dq/dt = .5*q*w equation
+        dq = np.array(q2) - np.array(q1)
+        angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
+        return angularVel
+
     def worldToBody(self, vector, orientation):
         orientation = [orientation.x, orientation.y, orientation.z, orientation.w]
         orientationInv = quaternion_inverse(orientation)
@@ -34,7 +45,7 @@ class ExecuteTrajectory(object):
         newVector = quaternion_multiply(orientation, quaternion_multiply(vector, orientationInv))[:3]
         return newVector
 
-    def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
+    def calculateLinearDeriv(self, p1, p2, currentOrientation, dt):
         # take derivate of position to get world velocity and convert to body velocity
         ans = [(p2[0] - p1[0])/dt, (p2[1] - p1[1])/dt, (p2[2] - p1[2])/dt]
         return self.worldToBody(ans, currentOrientation)
@@ -119,7 +130,7 @@ class ExecuteTrajectory(object):
                 dt = t[i + 1] - t[i - 1]
 
             # add linear and angular velocity at the current point to v and angV arrays
-            v.append(self.calculateLinearVelocity(p1, p2, currentOrientation, dt))
+            v.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
             angV.append(self.calculateAngularVelocity(q1, q2, currentOrientation, dt))
 
 
@@ -155,18 +166,18 @@ class ExecuteTrajectory(object):
                 dt = t[end] - t[end - 1]     
             # normal case
             else:
-                p2 = (p[i + 1] + p[i])/2
-                p1 = (p[i - 1] + p[i])/2
+                p2 = (v[i + 1] + v[i])/2
+                p1 = (v[i - 1] + v[i])/2
 
-                q2 = (angP[i + 1] + angP[i])/2
-                q1 = (angP[i - 1] + angP[i])/2
+                q2 = (angV[i + 1] + angV[i])/2
+                q1 = (angV[i - 1] + angV[i])/2
                 currentOrientation = angP[i]   
 
                 dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
 
             # add linear and angular acceleration at the current point to a and angA arrays
-            a.append(self.calculateLinearVelocity(p1, p2, currentOrientation, dt))
-            angA.append(self.calculateAngularVelocity(q1, q2, currentOrientation, dt))
+            a.append(self.calculateLinearDeriv(p1, p2, currentOrientation, dt))
+            angA.append(self.calculateAngularAcceleration(q1, q2, currentOrientation, dt))
 
         # create an object to store the response
         response = MultiDOFJointTrajectory()        
