@@ -231,6 +231,6 @@ class ExecuteTrajectory(object):
         self.actionPub.publish(response)
 
 if __name__ == '__main__':
-    rospy.init_node('linear_interpolator')
+    rospy.init_node('moveit_translator')
     server = ExecuteTrajectory()
     rospy.spin()
