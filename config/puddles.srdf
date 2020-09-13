@@ -28,6 +28,7 @@
     <disable_collisions link1="puddles/downward_link" link2="puddles/dvl_sonar3_link" reason="Never" />
     <disable_collisions link1="puddles/downward_link" link2="puddles/origin" reason="Adjacent" />
     <disable_collisions link1="puddles/downward_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/downward_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/downward_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/downward_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/downward_link" link2="puddles/thruster_0" reason="Never" />
@@ -44,6 +45,7 @@
     <disable_collisions link1="puddles/dvl_link" link2="puddles/dvl_sonar3_link" reason="Adjacent" />
     <disable_collisions link1="puddles/dvl_link" link2="puddles/origin" reason="Adjacent" />
     <disable_collisions link1="puddles/dvl_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/dvl_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_link" link2="puddles/thruster_0" reason="Never" />
@@ -59,6 +61,7 @@
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/dvl_sonar3_link" reason="Default" />
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/origin" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar0_link" link2="puddles/thruster_0" reason="Never" />
@@ -73,6 +76,7 @@
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/dvl_sonar3_link" reason="Default" />
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/origin" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar1_link" link2="puddles/thruster_0" reason="Never" />
@@ -86,6 +90,7 @@
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/dvl_sonar3_link" reason="Default" />
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/origin" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/thruster_0" reason="Never" />
@@ -98,6 +103,7 @@
     <disable_collisions link1="puddles/dvl_sonar2_link" link2="puddles/thruster_7" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/origin" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/pressure_link" reason="Never" />
+    <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/thruster_0" reason="Never" />
@@ -109,7 +115,8 @@
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/thruster_6" reason="Never" />
     <disable_collisions link1="puddles/dvl_sonar3_link" link2="puddles/thruster_7" reason="Never" />
     <disable_collisions link1="puddles/origin" link2="puddles/pressure_link" reason="Adjacent" />
-    <disable_collisions link1="puddles/origin" link2="puddles/stereo/left_link" reason="Adjacent" />
+    <disable_collisions link1="puddles/origin" link2="puddles/stereo/base_link" reason="Adjacent" />
+    <disable_collisions link1="puddles/origin" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/origin" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/origin" link2="puddles/thruster_0" reason="Adjacent" />
     <disable_collisions link1="puddles/origin" link2="puddles/thruster_1" reason="Adjacent" />
@@ -119,6 +126,7 @@
     <disable_collisions link1="puddles/origin" link2="puddles/thruster_5" reason="Adjacent" />
     <disable_collisions link1="puddles/origin" link2="puddles/thruster_6" reason="Adjacent" />
     <disable_collisions link1="puddles/origin" link2="puddles/thruster_7" reason="Adjacent" />
+    <disable_collisions link1="puddles/pressure_link" link2="puddles/stereo/base_link" reason="Never" />
     <disable_collisions link1="puddles/pressure_link" link2="puddles/stereo/left_link" reason="Never" />
     <disable_collisions link1="puddles/pressure_link" link2="puddles/stereo/right_link" reason="Never" />
     <disable_collisions link1="puddles/pressure_link" link2="puddles/thruster_0" reason="Never" />
@@ -129,6 +137,16 @@
     <disable_collisions link1="puddles/pressure_link" link2="puddles/thruster_5" reason="Never" />
     <disable_collisions link1="puddles/pressure_link" link2="puddles/thruster_6" reason="Never" />
     <disable_collisions link1="puddles/pressure_link" link2="puddles/thruster_7" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/stereo/left_link" reason="Adjacent" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/stereo/right_link" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_0" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_1" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_2" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_3" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_4" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_5" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_6" reason="Never" />
+    <disable_collisions link1="puddles/stereo/base_link" link2="puddles/thruster_7" reason="Never" />
     <disable_collisions link1="puddles/stereo/left_link" link2="puddles/stereo/right_link" reason="Adjacent" />
     <disable_collisions link1="puddles/stereo/left_link" link2="puddles/thruster_0" reason="Never" />
     <disable_collisions link1="puddles/stereo/left_link" link2="puddles/thruster_1" reason="Never" />
