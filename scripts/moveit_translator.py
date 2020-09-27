@@ -64,7 +64,7 @@ class ExecuteTrajectory(object):
     def calculateAcceleration(self, v1, v2, dt):
         v1 = np.array(v1)
         v2 = np.array(v2)
-        ans = v2 - v1 / dt
+        ans = (v2 - v1) / dt
         return ans    
 
     def execute_cb(self, goal):       
