@@ -6,7 +6,7 @@ from moveit_msgs.msg import ExecuteTrajectoryActionGoal
 from trajectory_msgs.msg import JointTrajectoryPoint, MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
 from geometry_msgs.msg import Transform, Twist, Vector3, Quaternion
 from tf.transformations import quaternion_multiply, quaternion_slerp, quaternion_inverse
-from riptide_controllers.msg import FollowTrajectoryAction
+from riptide_controllers.msg import FollowTrajectoryAction, FollowTrajectoryGoal
 import numpy as np
  
 # returns a sample trajectory to use for testing
@@ -30,18 +30,12 @@ def giveSampleGoal():
 class ExecuteTrajectory(object):
 
     def __init__(self):
-        # self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
-        self.actionPub = rospy.Publisher("topic_name", MultiDOFJointTrajectory, queue_size=1) 
+        self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
                 
         self.client = actionlib.SimpleActionClient("puddles/follow_trajectory", FollowTrajectoryAction)
         self.client.wait_for_server()
-        
-        self.goal = giveSampleGoal()        
-
-        rate = rospy.Rate(10) # 10hz
-        while not rospy.is_shutdown():
-            self.execute_cb(self.goal)
-            rate.sleep()            
+          
+    
 
     # q1 is first orientation, q2 is second orientation. Dt is time between them
     # Will return angular velocity to traverse between the two points in body frame. 
@@ -54,11 +48,11 @@ class ExecuteTrajectory(object):
         angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
         return angularVel
 
-    def worldToBody(self, vector, orientation):        
-        orientationInv = quaternion_inverse(orientation)
+    def worldToBody(self, vector, orientation):
         vector = np.append(vector, 0)
-        newVector = quaternion_multiply(orientation, quaternion_multiply(vector, orientationInv))[:3]
-        return newVector
+        orientationInv = quaternion_inverse(orientation)
+        newVector = quaternion_multiply(orientationInv, quaternion_multiply(vector, orientation))
+        return newVector[:3]
 
     def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
         p1 = np.array(p1)
@@ -73,7 +67,8 @@ class ExecuteTrajectory(object):
         ans = v2 - v1 / dt
         return ans    
 
-    def execute_cb(self, goal):        
+    def execute_cb(self, goal):       
+        rospy.loginfo("Translating trajectory") 
 
         # array of each point as a move_it msg
         points = goal.goal.trajectory.multi_dof_joint_trajectory.points
