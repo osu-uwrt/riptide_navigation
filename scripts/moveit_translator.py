@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 import rospy
 import actionlib
+import copy
 
 from moveit_msgs.msg import ExecuteTrajectoryActionGoal
 from trajectory_msgs.msg import JointTrajectoryPoint, MultiDOFJointTrajectoryPoint, MultiDOFJointTrajectory
@@ -9,7 +10,7 @@ from tf.transformations import quaternion_multiply, quaternion_slerp, quaternion
 from riptide_controllers.msg import FollowTrajectoryAction, FollowTrajectoryGoal
 import numpy as np
  
-# returns a sample trajectory to use for testing
+# returns a sample ExecuteTrajectoryActionGoal() to use for testing
 def giveSampleGoal():   
     goal = ExecuteTrajectoryActionGoal()            
     ans = MultiDOFJointTrajectory()
@@ -34,208 +35,148 @@ class ExecuteTrajectory(object):
                 
         self.client = actionlib.SimpleActionClient("puddles/follow_trajectory", FollowTrajectoryAction)
         self.client.wait_for_server()
+
+        # self.goal = giveSampleGoal()
+        # rate = rospy.Rate(10) # 10hz
+        # while not rospy.is_shutdown():
+        #     self.execute_cb(self.goal)
+        #     rate.sleep()            
           
-    
-
-    # q1 is first orientation, q2 is second orientation. Dt is time between them
-    # Will return angular velocity to traverse between the two points in body frame. 
-    # Must also pass currentOrientation. This is the orientation for the time period
-    def calculateAngularVelocity(self, q1, q2, currentOrientation, dt):            
-        # Below code only works with small angles. Should be the case for interpolator
-        # Compute dq of our error and convert to angular velocity
-        # This uses the dq/dt = .5*q*w equation
-        dq = np.array(q2) - np.array(q1)
-        angularVel = quaternion_multiply(quaternion_inverse(currentOrientation), dq)[:3] / dt
-        return angularVel
-
+    # returns a vector converted to the world frame
+    #   vector = np array of size 3
+    #   orientation np array of size 4 representing a quaternion
+    #   return = np array of vector converted to the world frame
     def worldToBody(self, vector, orientation):
         vector = np.append(vector, 0)
         orientationInv = quaternion_inverse(orientation)
         newVector = quaternion_multiply(orientationInv, quaternion_multiply(vector, orientation))
         return newVector[:3]
 
-    def calculateLinearVelocity(self, p1, p2, currentOrientation, dt):
-        p1 = np.array(p1)
-        p2 = np.array(p2)
-        # take derivate of position to get world velocity and convert to body velocity        
-        ans = (p2 - p1) / dt
-        return self.worldToBody(ans, currentOrientation)
-
-    def calculateAcceleration(self, v1, v2, dt):
-        v1 = np.array(v1)
-        v2 = np.array(v2)
+    # returns the acceleration between two velocities
+    #   v1 = Vector3() of velocity which occured first
+    #   v2 = Vector3() of velocity which occured second
+    #   dt = elapsed time between v1 and v2
+    #   return = acceleration between v1 and v2 as a Vector3() 
+    def calculate_acceleration(self, v1, v2, dt):
+        v1 = np.array([v1.x, v1.y, v1.z])
+        v2 = np.array([v2.x, v2.y, v2.z])
         ans = (v2 - v1) / dt
-        return ans    
+        return Vector3(x=ans[0], y=ans[1], z=ans[2])
 
-    def execute_cb(self, goal):       
-        rospy.loginfo("Translating trajectory") 
+    # returns average linear and angular velocity between two velocities
+    #   v1 = Twist() of first velocity
+    #   v2 = Twist() of second velocity
+    #   return = Twist() of average linear and angular velocity
+    def mid_velocity(self, v1, v2):
+        linear = (np.array([v1.linear.x, v1.linear.y, v1.linear.z]) + 
+            np.array([v2.linear.x, v2.linear.y, v2.linear.z])) / 2
+        angular = (np.array([v1.angular.x, v1.angular.y, v1.angular.z]) + 
+            np.array([v2.angular.x, v2.angular.y, v2.angular.z])) / 2
+        return Twist(
+            linear=Vector3(x=linear[0], y=linear[1], z=linear[2]),
+            angular=Vector3(x=angular[0],y=angular[1],z=angular[2])
+        ) 
 
-        # array of each point as a move_it msg
-        points = goal.goal.trajectory.multi_dof_joint_trajectory.points
+    # returns velocities before and after the current point and the time between them
+    #   i = index used to find nearest two velocities in p
+    #   p = array of MultiDOFJointTrajectoryPoint()
+    #   return = Twist() before i, Twist() after i, elapsed time between the twists
+    def acceleration_points(self, i, p):        
+        end = len(p) - 1 
+        if (i == 0):
+            v1 = p[0].velocities[0]
+            v2 = p[1].velocities[0]
+            dt = p[0].time_from_start.to_sec() - p[1].time_from_start.to_sec()        
+        elif (i == end):                
+            v1 = p[end - 1].velocities[0]
+            v2 = p[end].velocities[0] 
+            dt = p[end].time_from_start.to_sec() - p[end - 1].time_from_start.to_sec()                   
+        else:
+            p0 = p[i - 1]
+            p1 = center = p[i] 
+            p2 = p[i + 1]            
+            v1 = self.mid_velocity(p0.velocities[0], p1.velocities[0])
+            v2 = self.mid_velocity(p1.velocities[0], p2.velocities[0])
+            dt = (p2.time_from_start.to_sec() - p0.time_from_start.to_sec()) / 2
+        return v1, v2, dt
 
-        # arrays for linear and angular position, velocity, and acceleration
-        p = []
-        v = []
-        a = []        
+    # provides linear and angular acceleration at the current point
+    #   p = array of MultiDOFJointTrajectoryPoint()
+    #   i = index of the current point
+    #   return = linear and angular acceleration as a Twist()
+    def get_acceleration(self, i, p):                        
+        v1, v2, dt = self.acceleration_points(i, p)
+        return Twist(
+            linear=self.calculate_acceleration(v1.linear, v2.linear, dt),
+            angular=self.calculate_acceleration(v1.angular, v2.angular, dt)
+        )
 
-        angP = []
-        angV = []
-        angA = []    
+    # returns the velocity between two positions
+    #   p1 = Vector3() at position that occured first
+    #   p2 = Vector3() at position that occured second
+    #   orientation = Quaternion() of current orientation
+    #   dt = elapsed time between p1 and p2
+    #   return = velocity between p1 and p2 as a Vector3()
+    def calculate_linear_velocity(self, p1, p2, orientation, dt):
+        v = (np.array([p2.x, p2.y, p2.z]) - np.array([p1.x, p1.y, p1.z])) / dt
+        o = np.array([orientation.x, orientation.y, orientation.z, orientation.w])
+        ans = self.worldToBody(v, o)
+        return Vector3(x=ans[0], y=ans[1], z=ans[2])
 
-        # array for time
-        t = []
+    # returns the velocity needed to traverse between two orientations 
+    #   q1 = Quaternion() at orientation that occurs first
+    #   q2 = Quaternion() at orientation that occurs second
+    #   o = the current world frame orientation in the time period
+    #   dt =  elapsed time between q1 and q2
+    #   return = needed velocity between q1 and q2 as a Vector3()     
+    def calculate_angular_velocity(self, q1, q2, o, dt):            
+        # Below code only works with small angles. Should be the case for interpolator
+        # Compute dq of our error and convert to angular velocity
+        # This uses the dq/dt = .5*q*w equation
+        dq = np.array([q2.x, q2.y, q2.z, q2.w]) - np.array([q1.x, q1.y, q1.z, q1.w])
+        ans = quaternion_multiply(quaternion_inverse(np.array([o.x, o.y, o.z, o.w])), dq)[:3] / dt    
+        return Vector3(x=ans[0], y=ans[1], z=ans[2])
 
-        # extract position, rotation and time from each point in points
+    # returns positions before and after the current point and the time between them
+    #   i = index used to find nearest two points in array p
+    #   p = array of MultiDOFJointTrajectoryPoint() 
+    #   return = Transform() before i, Tranform() after i, elapsed time between the transforms
+    def velocity_points(self, i, p):   
+        end = len(p) - 1             
+        if (i == 0):
+            p1 = p[0]
+            p2 = p[1]                                                
+        elif (i == end):                
+            p1 = p[end - 1]
+            p2 = p[end]                        
+        else:
+            p1 = p[i - 1]
+            p2 = p[i + 1] 
+        dt = p2.time_from_start.to_sec() - p1.time_from_start.to_sec()
+        return p1.transforms[0], p2.transforms[0], dt       
+
+    # returns linear and angular velocity for the point at index i
+    #   p = array of MultiDOFJointTrajectoryPoint()
+    #   i = index of a point in p
+    #   return = Twist() of linear and angular velocities
+    def get_velocity(self, i, p):
+        orientation = p[i].transforms[0].rotation
+        p1, p2, dt = self.velocity_points(i, p)
+        return Twist(
+            linear=self.calculate_linear_velocity(p1.translation, p2.translation, orientation, dt),
+            angular=self.calculate_angular_velocity(p1.rotation, p2.rotation, orientation, dt)          
+        )
+
+    # function to be called when a new trajectory is published
+    #   goal = ExecuteTrajectoryActionGoal()
+    def execute_cb(self, goal):
+        ans = copy.deepcopy(goal.goal.trajectory.multi_dof_joint_trajectory)
+        points = ans.points
         for i in range(len(points)):
-            point = points[i]
-            
-            # add position to array p           
-            p.append([
-                point.transforms[0].translation.x, 
-                point.transforms[0].translation.y, 
-                point.transforms[0].translation.z
-            ])
-
-            # add rotation to array angP
-            angP.append([
-                point.transforms[0].rotation.x,
-                point.transforms[0].rotation.y,
-                point.transforms[0].rotation.z,
-                point.transforms[0].rotation.w
-            ])
-
-            # add time at the point to array t
-            t.append(point.time_from_start.to_sec())
-
-
-        # take derivate of position to get velocity relative to the robot body
+            points[i].velocities.append(self.get_velocity(i, points))
         for i in range(len(points)):
-            # front of array
-            if (i == 0):
-                p2 = p[1]
-                p1 = p[0]
-
-                q2 = angP[1]
-                q1 = angP[0]
-                currentOrientation = q1
-
-                dt = t[1] - t[0]        
-            # end of array
-            elif (i == len(p) - 1):
-                end = len(p) - 1
-                p2 = p[end]
-                p1 = p[end - 1]
-
-                q2 = angP[end]
-                q1 = angP[end - 1]
-                currentOrientation = q2
-
-                dt = t[end] - t[end - 1]     
-            # normal case
-            else:
-                p2 = p[i + 1]
-                p1 = p[i - 1]
-
-                q2 = angP[i + 1]
-                q1 = angP[i - 1]
-                currentOrientation = angP[i]   
-
-                dt = t[i + 1] - t[i - 1]
-
-            # add linear and angular velocity at the current point to v and angV arrays
-            v.append(self.calculateLinearVelocity(p1, p2, currentOrientation, dt))
-            angV.append(self.calculateAngularVelocity(q1, q2, currentOrientation, dt))
-
-        # take derivate of velocity to get acceleration relative to the robot body
-        for i in range(len(points)):
-            # front of array
-            if (i == 0):
-                p2 = v[1]
-                p1 = v[0]
-
-                q2 = angV[1]
-                q1 = angV[0]
-                currentOrientation = q1
-
-                dt = t[1] - t[0]        
-            # end of array
-            elif (i == len(v) - 1):
-                end = len(v) - 1
-                p2 = v[end]
-                p1 = v[end - 1]
-
-                q2 = angV[end]
-                q1 = angV[end - 1]
-                currentOrientation = q2
-
-                dt = t[end] - t[end - 1]     
-            # normal case
-            else:
-                p2 = (v[i + 1] + v[i])/2
-                p1 = (v[i - 1] + v[i])/2
-
-                q2 = (angV[i + 1] + angV[i])/2
-                q1 = (angV[i - 1] + angV[i])/2
-                currentOrientation = angP[i]   
-
-                dt = (t[i + 1] + t[i])/2 - (t[i - 1] + t[i])/2
-
-            # add linear and angular acceleration at the current point to a and angA arrays
-            a.append(self.calculateAcceleration(p1, p2, dt))
-            angA.append(self.calculateAcceleration(q1, q2, dt))
-
-        # create an object to store the response
-        response = MultiDOFJointTrajectory()        
-        
-        # build each point in the response 
-        for i in range(len(points)):                        
-            pos = p[i]
-            vel = v[i]
-            acc = a[i]
-            angPos = angP[i]
-            angVel = angV[i]
-            angAcc = angA[i]
-
-            point = MultiDOFJointTrajectoryPoint()
-            # add x y z position and angular rotation quaternion
-            point.transforms.append(Transform())
-            
-            point.transforms[0].translation = Vector3()
-            point.transforms[0].translation.x = pos[0]
-            point.transforms[0].translation.y = pos[1]
-            point.transforms[0].translation.z = pos[2]
-            
-            point.transforms[0].rotation = Quaternion()
-            point.transforms[0].rotation.x = angPos[0]
-            point.transforms[0].rotation.y = angPos[1]
-            point.transforms[0].rotation.z = angPos[2]
-            point.transforms[0].rotation.w = angPos[3]
-
-            # add x y z velocity and angular velocity
-            point.velocities.append(Twist())
-            point.velocities[0].linear.x = vel[0]
-            point.velocities[0].linear.y = vel[1]
-            point.velocities[0].linear.z = vel[2]
-            point.velocities[0].angular.x = angVel[0]
-            point.velocities[0].angular.y = angVel[1]
-            point.velocities[0].angular.z = angVel[2]
-
-            # add x y and z acceleration and angular acceleration
-            point.accelerations.append(Twist())
-            point.accelerations[0].linear.x = acc[0]
-            point.accelerations[0].linear.y = acc[1]
-            point.accelerations[0].linear.z = acc[2]
-            point.accelerations[0].angular.x = angAcc[0]
-            point.accelerations[0].angular.y = angAcc[1]
-            point.accelerations[0].angular.z = angAcc[2]
-
-            # add time since start of execution to each point
-            point.time_from_start = points[i].time_from_start
-
-            response.points.append(point)
-
-        # send goal to start the action
-        self.current_action = self.client.send_goal(FollowTrajectoryGoal(response))   
+            points[i].accelerations.append(self.get_acceleration(i, points))
+        self.current_action = self.client.send_goal(FollowTrajectoryGoal(ans))  
 
 if __name__ == '__main__':
     rospy.init_node('moveit_translator')
