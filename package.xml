@@ -1,6 +1,6 @@
 <package>
 
-  <name>riptide_moveit_config</name>
+  <name>riptide_navigation</name>
   <version>0.3.0</version>
   <description>
      An automatically generated package with all the configuration and launch files for using the puddles with the MoveIt! Motion Planning Framework
