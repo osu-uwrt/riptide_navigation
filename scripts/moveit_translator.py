@@ -14,6 +14,7 @@ def msgToNumpy(msg):
         if hasattr(msg, "w"):
             return np.array([msg.x, msg.y, msg.z, msg.w])
         return np.array([msg.x, msg.y, msg.z])  
+
  
 
 class ExecuteTrajectory(object):
@@ -108,6 +109,7 @@ class ExecuteTrajectory(object):
             points[i].accelerations.append(Twist(Vector3(*acceleration[:3]), Vector3(*acceleration[3:])))
 
         self.current_action = self.client.send_goal(FollowTrajectoryGoal(ans))  
+
 
 if __name__ == '__main__':
     rospy.init_node('moveit_translator')
