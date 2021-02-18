@@ -1,5 +1,4 @@
 controller_list:
-  - name: fake_puddles_controller
+  - name: fake_puddles_base_controller
     joints:
-      - floating_baselink
-      
+      - virtual_joint

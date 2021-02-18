@@ -1,11 +1,11 @@
 moveit_setup_assistant_config:
   URDF:
     package: riptide_descriptions
-    relative_path: robots/puddles.urdf
+    relative_path: robots/puddles.xacro
     xacro_args: ""
   SRDF:
     relative_path: config/puddles.srdf
   CONFIG:
-    author_name: Parth Parekh
-    author_email: prth.2000@gmail.com
-    generated_timestamp: 1587234913
+    author_name: OSU UWRT
+    author_email: osu.uwrt@gmail.com
+    generated_timestamp: 1611811291
