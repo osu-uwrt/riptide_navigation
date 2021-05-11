@@ -30,7 +30,7 @@ def giveSampleGoal():
 class ExecuteTrajectory(object):
 
     def __init__(self):
-        self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
+        self.actionSub = rospy.Subscriber("execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
                 
         self.client = actionlib.SimpleActionClient("puddles/follow_trajectory", FollowTrajectoryAction)
         self.client.wait_for_server()

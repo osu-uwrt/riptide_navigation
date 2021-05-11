@@ -20,9 +20,9 @@ def msgToNumpy(msg):
 class ExecuteTrajectory(object):
 
     def __init__(self):
-        self.actionSub = rospy.Subscriber("/execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
+        self.actionSub = rospy.Subscriber("execute_trajectory/goal/", ExecuteTrajectoryActionGoal, self.execute_cb)
                 
-        self.client = actionlib.SimpleActionClient("puddles/follow_trajectory", FollowTrajectoryAction)
+        self.client = actionlib.SimpleActionClient("follow_trajectory", FollowTrajectoryAction)
         self.client.wait_for_server()
   
     # Takes in two MultiDOFPoints and the current orientation as np array
@@ -108,6 +108,7 @@ class ExecuteTrajectory(object):
             acceleration = self.get_acceleration(i, points)
             points[i].accelerations.append(Twist(Vector3(*acceleration[:3]), Vector3(*acceleration[3:])))
 
+        rospy.loginfo("Done interpolating trajectory")
         self.current_action = self.client.send_goal(FollowTrajectoryGoal(ans))  
 
 
