@@ -21,6 +21,10 @@
 
   <arg name="capabilities" default=""/>
   <arg name="disable_capabilities" default=""/>
+
+  <!-- Planning Pipline -->
+  <include ns="/moveit_cpp_tutorial/ompl" file="$(find panda_moveit_config)/launch/ompl_planning_pipeline.launch.xml"/>
+
   <!-- load these non-default MoveGroup capabilities (space seperated) -->
   <!--
   <arg name="capabilities" value="
