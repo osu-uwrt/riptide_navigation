@@ -16,13 +16,16 @@
 
   <buildtool_depend>catkin</buildtool_depend>
 
-  <run_depend>moveit_ros_move_group</run_depend>
-  <run_depend>moveit_fake_controller_manager</run_depend>
-  <run_depend>moveit_kinematics</run_depend>
-  <run_depend>moveit_planners_ompl</run_depend>
-  <run_depend>moveit_ros_visualization</run_depend>
-  <run_depend>moveit_setup_assistant</run_depend>
-  <run_depend>moveit_commander</run_depend>
+  <build_depend>octomap</build_depend>
+  <run_depend>octomap</run_depend>
+  <build_depend>octomap_server</build_depend>
+  <run_depend>octomap_server</run_depend>
+  <build_depend>octomap_mapping</build_depend>
+  <run_depend>octomap_mapping</run_depend>
+  <build_depend>octomap_ros</build_depend>
+  <run_depend>octomap_ros</run_depend>
+  <build_depend>octomap_msgs</build_depend>
+  <run_depend>octomap_msgs</run_depend>
   <run_depend>joint_state_publisher</run_depend>
   <run_depend>joint_state_publisher_gui</run_depend>
   <run_depend>robot_state_publisher</run_depend>
@@ -31,6 +34,5 @@
   <!-- This package is referenced in the warehouse launch files, but does not build out of the box at the moment. Commented the dependency until this works. -->
   <!-- <run_depend>warehouse_ros_mongo</run_depend> -->
     <run_depend>riptide_descriptions</run_depend>
-
 
 </package>
